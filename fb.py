@@ -10,7 +10,7 @@ SECRET_KEY = 'Nadav Mermer'
 DEBUG = True
 FACEBOOK_APP_ID = '324858954337623'
 FACEBOOK_APP_SECRET = 'de6cd1c9f02cf369745b284eed772852'
-
+OUTFITSUS_ALBUM_NAME = 'outfitsus'
 
 app = Flask(__name__)
 app.debug = DEBUG
@@ -86,18 +86,27 @@ def home():
     graph = fb.GraphAPI(session['oauth_token'][0])
     #get current user's object
     user = graph.get_object("me")
-    #preparing to log user in DB
-    user["ufid"] = user["id"]
-    user["oauth_token"] = session['oauth_token'][0]
+    #preparing "logged_user" <User> object for logging user into the DB
+    user["ufid"] = user["id"] #in the db we have ufid column instead of just id
+    user["oauth_token"] = session['oauth_token'][0] #i wanna keep the oauth for future use
     split_birthday = user["birthday"].split('/')
-    user["birthday"] = split_birthday[2]+"-"+split_birthday[0]+"-"+split_birthday[1]
-    logged_user = sess.query(User).get(user["ufid"])
+    user["birthday"] = split_birthday[2]+"-"+split_birthday[0]+"-"+split_birthday[1] # changing birthday date format
+    logged_user = sess.query(User).get(user["ufid"]) #querying for existing user row in db
     if not logged_user:
-        logged_user = User()
+        logged_user = User() #if user doesnt exist in db create a new object
     for key in user.keys():
-        logged_user.__setattr__(key,user[key])
-    user["is_modified"] = sess.is_modified(logged_user)
-    #logging the user in DB
+        logged_user.__setattr__(key,user[key]) #dump all "user" graphAPI response into User object
+
+    #adding the app album_id to the User object (logged_user) for future photo uploading
+    albums = graph.get_object('/me/albums')
+    logged_user.album_id = None
+    for album in albums['data']:
+        if album['name'] == OUTFITSUS_ALBUM_NAME:
+            logged_user.album_id = album['id']
+    if not logged_user.album_id:
+        logged_user.album_id = graph.put_object('/me','albums',name='outfits')
+
+    #saving user's details to the db
     sess.add(logged_user)
     sess.flush()
 
