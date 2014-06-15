@@ -1,4 +1,6 @@
 from flask import Flask, redirect, url_for, session, request, render_template, mysql
+from sqlalchemy import MetaData, Column, Integer, String, create_engine
+from sqlalchemy.orm import mapper, create_session
 from flask_oauth import OAuth
 import facebook as fb
 import json
@@ -15,13 +17,13 @@ app.debug = DEBUG
 app.secret_key = SECRET_KEY
 oauth = OAuth()
 # init db connection
-mysql = mysql.MySQL()
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
-app.config['MYSQL_DATABASE_DB'] = 'test'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-mysql.init_app(app)
-cursor = mysql.connect().cursor()
+eng = create_engine("mysql://nadav:123456@localhost/outfitsus", encoding='utf-8', echo=False)
+meta = MetaData(bind=eng)
+meta.reflect()
+class User(object):
+    pass
+usermapper = mapper(User, meta.tables['fb_logged_users'])
+sess = create_session()
 
 facebook = oauth.remote_app('facebook',
     base_url='https://graph.facebook.com/',
@@ -83,6 +85,16 @@ def home():
         return redirect(url_for('index'))
     graph = fb.GraphAPI(session['oauth_token'][0])
     user = graph.get_object("me")
+    user["ufid"] = user["id"]
+    user["oauth_token"] = session['oauth_token'][0]
+    user["birthday"] =
+    logged_user = sess.query(User).get(user["id"])
+    is_user_exists = True
+    if not logged_user:
+        logged_user = User()
+    logged_user.__dict__.update(user)
+    sess.add(logged_user)
+    sess.flush()
     friends = graph.get_connections(user["id"], "friends")
     return render_template('fb.html', user_object=json.dumps(user), friends=json.dumps(friends))
 
