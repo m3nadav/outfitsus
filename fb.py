@@ -84,17 +84,22 @@ def home():
     if not session.has_key('oauth_token') or session['oauth_token'] == None:
         return redirect(url_for('index'))
     graph = fb.GraphAPI(session['oauth_token'][0])
+    #get current user's object
     user = graph.get_object("me")
+    #preparing to log user in DB
     user["ufid"] = user["id"]
     user["oauth_token"] = session['oauth_token'][0]
-    user["birthday"] =
+    #user["birthday"] =
     logged_user = sess.query(User).get(user["id"])
     is_user_exists = True
     if not logged_user:
         logged_user = User()
     logged_user.__dict__.update(user)
+    #logging the user in DB
     sess.add(logged_user)
     sess.flush()
+
+    #searching for other friends signed to this app
     friends = graph.get_connections(user["id"], "friends")
     return render_template('fb.html', user_object=json.dumps(user), friends=json.dumps(friends))
 
