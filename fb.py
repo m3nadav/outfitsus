@@ -35,9 +35,9 @@ facebook = oauth.remote_app('facebook',
 
 @app.route('/')
 def index():
-    if not session.has_key('fid'):
+    #if not get_facebook_oauth_token():
         return redirect(url_for('login'))
-    return redirect(url_for('home'))
+    #return redirect(url_for('home'))
 
 @app.route('/login')
 def login():
@@ -67,7 +67,7 @@ def facebook_authorized(resp):
 
     #cursor.execute(insert_user);
 
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))
     return 'Logged in as id=%s name=%s redirect=%s' % \
         (me.data['id'], me.data['name'], request.args.get('next'))
 
@@ -78,9 +78,9 @@ def get_facebook_oauth_token():
 
 @app.route('/home')
 def home():
-    if not session.has_key('fid'):
-        return redirect(url_for('login'))
-    return render_template('fb.html', user_object=session['fid'])
+    if not session.has_key('oauth_token') or session['oauth_token'] == None:
+        return redirect(url_for('index'))
+    return render_template('fb.html', user_object=get_facebook_oauth_token())
 
 if __name__ == '__main__':
     app.run()
