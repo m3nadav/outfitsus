@@ -23,7 +23,6 @@ meta.reflect()
 class User(object):
     pass
 usermapper = mapper(User, meta.tables['fb_logged_users'])
-sess = create_session()
 
 facebook = oauth.remote_app('facebook',
     base_url='https://graph.facebook.com/',
@@ -81,6 +80,7 @@ def get_facebook_oauth_token():
 
 @app.route('/home')
 def home():
+    sess = create_session()
     if not session.has_key('oauth_token') or session['oauth_token'] == None:
         return redirect(url_for('index'))
     graph = fb.GraphAPI(session['oauth_token'][0])
@@ -89,12 +89,14 @@ def home():
     #preparing to log user in DB
     user["ufid"] = user["id"]
     user["oauth_token"] = session['oauth_token'][0]
-    #user["birthday"] =
-    logged_user = sess.query(User).get(user["id"])
-    is_user_exists = True
+    split_birthday = user["birthday"].split('/')
+    user["birthday"] = split_birthday[2]+"-"+split_birthday[0]+"-"+split_birthday[1]
+    logged_user = sess.query(User).get(user["ufid"])
     if not logged_user:
         logged_user = User()
-    logged_user.__dict__.update(user)
+    for key in user.keys():
+        logged_user.__setattr__(key,user[key])
+    user["is_modified"] = sess.is_modified(logged_user)
     #logging the user in DB
     sess.add(logged_user)
     sess.flush()
