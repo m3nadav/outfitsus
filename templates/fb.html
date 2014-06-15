@@ -6,6 +6,9 @@
 </head>
 <body>
     {{ user_object }}
+    <BR><BR>
+    {{ friends }}
+    <BR><BR>
 <script>
     window.fbAsyncInit = function() {
         FB.init({
@@ -177,6 +180,7 @@ Javascript:FB.login(function(response) {
 
 <form action="https://graph.facebook.com/me/feed" method="POST">
     <input type="text" name="message">
-    <input type="hidden" name="">
+    <input type="submit" value="share_status">
+</form>
 </body>
 </html>

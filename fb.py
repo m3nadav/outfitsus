@@ -1,5 +1,6 @@
 from flask import Flask, redirect, url_for, session, request, render_template, mysql
 from flask_oauth import OAuth
+import facebook as fb
 import json
 
 
@@ -29,7 +30,7 @@ facebook = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'email,user_birthday,user_education_history,user_photos,publish_actions'}
+    request_token_params={'scope': 'email,user_birthday,user_education_history,user_photos,publish_actions,user_videos,user_location,user_hometown,user_tagged_places,user_work_history,user_friends,user_likes,user_relationships,user_about_me,user_status,user_website,user_events'}
 )
 
 
@@ -80,7 +81,10 @@ def get_facebook_oauth_token():
 def home():
     if not session.has_key('oauth_token') or session['oauth_token'] == None:
         return redirect(url_for('index'))
-    return render_template('fb.html', user_object=get_facebook_oauth_token())
+    graph = fb.GraphAPI(session['oauth_token'][0])
+    user = graph.get_object("me")
+    friends = graph.get_connections(user["id"], "friends")
+    return render_template('fb.html', user_object=json.dumps(user), friends=json.dumps(friends))
 
 if __name__ == '__main__':
     app.run()
