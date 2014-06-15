@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>pages statistics</title>
+
+    <!-- Bootstrap -->
+    <!-- <link href="scripts/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="containr">
+        <div class="row">
+            <div class="h4 col-xs-6 col-md-6" align="center">Page Title</div>
+            <div class="h4 col-xs-3 col-md-3" align="center">Edit</div>
+            <div class="h4 col-xs-3 col-md-3" align="center">View</div>
+        </div>
+    {% for row in results %}
+        {% if loop.first %}
+            <div class="row">
+        {% endif %}
+        <div class="h6 col-xs-6 col-md-6" align="center"><a href="/mysql/{{ row[0] }}">{{ row[0] }}</a></div>
+            <div class="h6 col-xs-3 col-md-3" align="center">{{ row[1] }}</div>
+            <div class="h6 col-xs-3 col-md-3" align="center">{{ row[2] }}</div>
+        {% if loop.last %}
+            </div>
+        {% endif %}
+    {% endfor %}
+    </div>
+    {% if request.path != '/mysql' %}
+    <p><a href="/mysql">all pages</a></p>
+    {% endif %}
+</body>
+</html>
+

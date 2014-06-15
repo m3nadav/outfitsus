@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock %}</title>
+        {% if not common['username'] or common['username'] == '' and request.path != url_for('login') %}
+        <script type="text/javascript"> 
+            window.location = "{{ url_for('login') }}"
+        </script>
+        {% endif %}
+        <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div>{% block content %}{% endblock %}</div>
+        <div>{% block footer %}
+            <p><b>Hello {{ common['username'] }}: </b>
+            {% for path in common['links'] %}
+            <a href="/flask{{ path[0] }}">{{ path[1] }}</a>{% if not loop.last %},{% endif %} 
+            {% endfor %}
+        {% endblock %}</div>
+    </body>
+</html>
