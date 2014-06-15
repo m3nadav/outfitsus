@@ -103,9 +103,9 @@ def home():
     for album in albums['data']:
         if album['name'] == OUTFITSUS_ALBUM_NAME:
             logged_user.album_id = album['id']
-    if not logged_user.album_id:
-        logged_user.album_id = graph.put_object('/me','albums',name='outfits')
-
+            user["album"] = album
+    if logged_user.album_id == None:
+        logged_user.album_id = graph.put_object('/me','albums',name=OUTFITSUS_ALBUM_NAME)['id']
     #saving user's details to the db
     sess.add(logged_user)
     sess.flush()
