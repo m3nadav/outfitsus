@@ -30,7 +30,7 @@ facebook = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'email,user_birthday,user_education_history,user_photos,publish_actions,user_videos,user_location,user_hometown,user_tagged_places,user_work_history,user_friends,user_likes,user_relationships,user_about_me,user_status,user_website,user_events'}
+    request_token_params={'scope': 'email,user_birthday,user_education_history,user_photos,publish_actions,user_videos,user_hometown,user_work_history,user_friends,user_relationships,user_status,user_website'}
 )
 
 
