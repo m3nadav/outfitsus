@@ -102,10 +102,11 @@ def init():
     #adding the app album_id to the User object (logged_user) for future photo uploading
     albums = graph.get_object('/me/albums')
     logged_user.album_id = None
-    for album in albums['data']:
+    for i, album in enumerate(albums['data']):
         if album['name'] == OUTFITSUS_ALBUM_NAME:
             logged_user.album_id = album['id']
             user["album"] = album
+            break
     if logged_user.album_id == None:
         logged_user.album_id = graph.put_object('/me','albums',name=OUTFITSUS_ALBUM_NAME,privacy="{'value':'SELF'}")['id']
     #saving user's details to the db
