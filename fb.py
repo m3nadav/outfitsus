@@ -1,3 +1,4 @@
+#! /bin/env python2.7
 from flask import Flask, redirect, url_for, session, request, render_template, mysql
 from sqlalchemy import MetaData, Column, Integer, String, create_engine
 from sqlalchemy.orm import mapper, create_session
@@ -15,6 +16,7 @@ DEBUG = True
 FACEBOOK_APP_ID = '324858954337623'
 FACEBOOK_APP_SECRET = 'de6cd1c9f02cf369745b284eed772852'
 OUTFITSUS_ALBUM_NAME = 'outfitsus'
+ALLOWED_EXTENSIONS = set(['bmp', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.debug = DEBUG
@@ -41,6 +43,8 @@ facebook = oauth.remote_app('facebook',
     request_token_params={'scope': 'email,user_birthday,user_photos,publish_actions,user_friends,user_relationships,user_status,read_stream'}
 )
 
+def allowed_pics(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
@@ -116,8 +120,10 @@ def init():
 def home():
     if not get_facebook_oauth_token():
         return redirect(url_for('index'))
-
-    return render_template('fb.html', post_action=url_for('post'), logout_action=url_for('logout'))
+    sess = create_session()
+    logged_user = sess.query(User).get(session["fid"]) #querying for existing user row in db
+    album_url = "https://graph.facebook.com/%s/photos?access_token=%s" % (logged_user.album_id, logged_user.oauth_token)
+    return render_template('fb.html', post_action=url_for('post'), album_url=album_url, album_name=OUTFITSUS_ALBUM_NAME, logout_action=url_for('logout'))
 
 @app.route('/home/post', methods=['GET', 'POST'])
 def post():
@@ -128,7 +134,7 @@ def post():
         #privacy = {'privacy':{'value':'self'}} if form['privacy'] == 'self' else None'
         if form.has_key('link'):
             attachment = {'name':form['name'],'link':form['link'],'caption':form['caption'],'description':form['description'],'picture':form['picture'],'privacy':{'value':'self'}}
-            return graph.put_wall_post(form['message'], attachment)['id']
+            return graph.put_wall_post(form['message'].encode('UTF-8'), attachment)['id']
         else:
             return graph.put_wall_post(form['message'],{'privacy':{'value':'SELF'}})['id']
     post_id = False
@@ -137,16 +143,29 @@ def post():
     if request.method == 'POST':
         if request.form.has_key('wall_post'):
             post_id = wall_post(get_facebook_oauth_token()[0], request.form)
-    if post_id:
-        sess = create_session()
-        post = Post()
-        post.ufid = session['fid']
-        post.post_id = post_id
-        post.type = 'wall post'
-        sess.add(post)
-        sess.flush()
-    return render_template('wall_post.html', post=post)
+            if post_id:
+                sess = create_session()
+                post = Post()
+                post.ufid = session['fid']
+                post.post_id = post_id
+                post.type = 'wall post'
+                post.message = request.form['message'].encode('UTF-8')
+                sess.add(post)
+                sess.flush()
+                return render_template('wall_post.html', post=post)
+        elif request.form.has_key('pic_post'):
+            picture = request.files['pic']
+            if picture and allowed_pics(picture.filename.lower()):
+                filename = picture.filename
+                graph = fb.GraphAPI(get_facebook_oauth_token()[0])
+                sess = create_session()
+                logged_user = sess.query(User).get(session["fid"]) #querying for existing user row in db
+                album_id = logged_user.album_id
+                pic = graph.put_photo(image = picture, message=request.form['message'], album_id = album_id)
+                pic = graph.get_object(pic['id'])
+                return render_template('pic_post.html', pic=pic)
+
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="10.100.102.35",port=80)

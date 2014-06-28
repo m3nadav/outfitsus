@@ -63,19 +63,37 @@ javascript:FB.ui(
   }
 );">
 </div>
+<fieldset>
+    <legend>Logout</legend>
 <input type="button" name="logout" value="logout" onClick="
 FB.logout(function(response) {
   // user is now logged out
   window.location = '{{ logout_action }}';
 });
 " />
-
-<BR><BR>
+</fieldset>
 
 <form action="{{ post_action }}" method="POST">
+    <fieldset>
+    <legend>share a status:</legend>
     <input type="text" name="message">
     <input type="submit" value="share_status">
     <input type="hidden" name="wall_post" value="i">
+    </fieldset>
 </form>
+
+<form enctype="multipart/form-data" action="{{ post_action }}" method="POST">
+    <fieldset>
+    <legend>upload a picture:</legend>
+    Adding photo to album: {{ album_name }} <br/><br/>
+    Please choose a photo: 
+    <input name="pic" type="file"><br/><br/>
+    Say something about this photo: 
+    <input name="message" type="text" value=""><br/><br/>
+    <input type="hidden" name="pic_post" value="i">
+    <input type="submit" value="Upload" /><br/>
+    </fieldset>
+</form>
+
 </body>
 </html>
